@@ -1,0 +1,4 @@
+*.csv
+*.json
+virtual/
+.DS_Store

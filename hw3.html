@@ -123,12 +123,12 @@ section.footnotes {
 <pre><code>## - Project '~/Documents/Project/2025_Causal_Inference' loaded. [renv 1.1.5]
 ## - The project is out-of-sync -- use `renv::status()` for details.
 </code></pre>
+<pre><code class="language-r">library(markdown)
+</code></pre>
 <h2 id="sec:part-i-estimation-for-continuous-outcome-show-your-code-and-answer-by-r-markdown">Part I: Estimation for continuous outcome. Show your code and answer by R Markdown.</h2>
 <h3 id="sec:q1-a-according-to-the-following-models-please-simulate-a-dataset-with-1-000-observations-by-r-and-show-the-first-5-observations">Q1-(A) According to the following models, please simulate a dataset with 1,000 observations by R, and show the first 5 observations.</h3>
 <pre><code class="language-r"># 設定隨機種子以便重現
 set.seed(123)
-
-
 # 生成 L
 L &lt;- runif(1000, min = 8, max = 16)
 
@@ -143,13 +143,10 @@ p_A &lt;- expit(6 - 0.5 * L)
 A &lt;- rbinom(1000, size = 1, prob = p_A)
 # 計算 E[Y|A,L]
 EY &lt;- 20 + 2*A + 0.1*L
-
 # 根據正態分布生成 Y
 Y &lt;- rnorm(1000, mean = EY, sd = 1)
-
 # 建立資料框
 df &lt;- data.frame(L = L, A = A, Y = Y)
-
 # 顯示前 5 筆資料
 head(df, 5)
 </code></pre>
@@ -159,6 +156,76 @@ head(df, 5)
 ## 3 11.27182 1 23.10920
 ## 4 15.06414 1 23.37424
 ## 5 15.52374 0 19.00303
+</code></pre>
+<h3 id="sec:q1-b-suppose-l-represents-children-s-age-a-represents-whether-a-child-walks-to-school-a-0-or-picked-up-by-parents-a-1-and-represents-children-s-bmi-please-derive-the-estimate-of-causal-effect-based-on-standardization-method-under-difference-scale-both-point-and-95-ci">Q1-(B)Suppose L represents children’s age, A represents whether a child walks to school (A = 0) or picked up by parents (A = 1), and  represents children’s BMI. Please derive the estimate of causal effect based on standardization method under difference scale (both point and 95% CI).</h3>
+<pre><code class="language-r">lm.Y.AC = lm(Y ~ ., data = df)
+newdata_df = df
+newdata_df$A = 1
+phi.1 = mean(predict(lm.Y.AC,newdata = newdata_df))
+newdata_df$A = 0
+phi.0 = mean(predict(lm.Y.AC,newdata = newdata_df))
+print(phi.1 - phi.0)#point estimate by standardization method
+</code></pre>
+<pre><code>## [1] 2.053833
+</code></pre>
+<pre><code class="language-r">B.lis = rep(NA, 3000)
+for (b in 1:3000) {
+  resample.df = df[sample(220,220,replace = T),]
+  lm.Y.AC = lm(Y ~ ., data = resample.df)
+
+  resample.df$A = 1
+  phi.1 = mean(predict(lm.Y.AC,newdata = resample.df))
+
+  resample.df$A = 0
+  phi.0 = mean(predict(lm.Y.AC,newdata = resample.df))
+  B.lis[b] = phi.1 - phi.0
+  }
+  quantile(B.lis,probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+</code></pre>
+<pre><code>##     2.5%    97.5% 
+## 1.675347 2.196264
+</code></pre>
+<h3 id="sec:q1-c-please-derive-the-estimate-of-causal-effect-based-on-regression-based-estimator-under-difference-scale-both-point-and-95-ci">Q1-(C)Please derive the estimate of causal effect based on regression-based estimator under difference scale (both point and 95% CI).</h3>
+<pre><code class="language-r">set.seed(123)
+lm.Y.AC_Reg = lm(Y ~ ., data = df)
+print(lm.Y.AC_Reg$coefficients[3])#point estimate by regression-based method
+</code></pre>
+<pre><code>##        A 
+## 2.053833
+</code></pre>
+<pre><code class="language-r">B_Reg.lis = rep(NA, 3000)
+for (b in 1:3000) {
+  resample.regdf = df[sample(220,220,replace = T),]
+  lm.Y.AC_Reg = lm(Y ~ ., data = resample.regdf)
+
+  B_Reg.lis[b] = lm.Y.AC_Reg$coefficients[3]
+  }
+quantile(B_Reg.lis,probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+</code></pre>
+<pre><code>##     2.5%    97.5% 
+## 1.673502 2.213305
+</code></pre>
+<h3 id="sec:q1-d-please-derive-the-estimate-of-causal-effect-based-on-ipw-estimator-under-difference-scale-both-point-and-95-ci">Q1-(D)Please derive the estimate of causal effect based on IPW estimator under difference scale (both point and 95% CI).</h3>
+<pre><code class="language-r">lm.A.C = glm(A ~ .,data = df[,-2], family = binomial(link = &quot;logit&quot;))
+phi.1 = mean((df$A == 1)*df$Y/predict(lm.A.C,type = &quot;response&quot;))
+phi.0 = mean((df$A == 0)*df$Y/(1 - predict(lm.A.C,type = &quot;response&quot;)))
+print(phi.1 - phi.0)#IPW estimates of causal effect under difference scale
+</code></pre>
+<pre><code>## [1] 0.3356125
+</code></pre>
+<pre><code class="language-r">B.lis = rep(NA, 3000)
+for (b in 1:3000) {
+  resample.df = df[sample(220,220,replace = T),]
+  lm.A.C = glm(A ~ .,data = resample.df[,1:2], family = binomial(link = &quot;logit&quot;))
+  phi.1 = mean((resample.df$A == 1)*resample.df$Y/predict(lm.A.C,type = &quot;response&quot;))
+  phi.0 = mean((resample.df$A == 0)*resample.df$Y/(1 - predict(lm.A.C,type = &quot;response&quot;)))
+
+  B.lis[b] = phi.1 - phi.0
+  }
+quantile(B.lis, probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+</code></pre>
+<pre><code>##     2.5%    97.5% 
+## 1.223886 4.740056
 </code></pre>
 <pre><code class="language-r">library(markdown)
 knitr::spin(&quot;hw3.r&quot;, knit = TRUE)
@@ -170,11 +237,17 @@ knitr::spin(&quot;hw3.r&quot;, knit = TRUE)
 ## 
 ## processing file: hw3.Rmd
 </code></pre>
-<pre><code>## 1/5                  
-## 2/5 [unnamed-chunk-5]
-## 3/5                  
-## 4/5 [unnamed-chunk-6]
-## 5/5
+<pre><code>## 1/11                   
+## 2/11 [unnamed-chunk-11]
+## 3/11                   
+## 4/11 [unnamed-chunk-12]
+## 5/11                   
+## 6/11 [unnamed-chunk-13]
+## 7/11                   
+## 8/11 [unnamed-chunk-14]
+## 9/11                   
+## 10/11 [unnamed-chunk-15]
+## 11/11
 </code></pre>
 <pre><code>## output file: hw3.md
 </code></pre>

@@ -157,6 +157,44 @@ quantile(B.lis, probs = c(0.025,0.975))#percentile bootstrap confidence interval
 ## 1.223886 4.740056
 ```
 
+## Estimation for binary outcome. Show your code and answer by R Markdown.
+### Q2-(A)
+
+
+``` r
+According to the following model, generate variable \(Y\):
+
+$$
+Y \sim Bern(p_y), \quad p_y = \text{expit}(-4 - A + 3L)
+$$
+
+
+
+
+set.seed(123)
+expit <- function(x) 1 / (1 + exp(-x))
+p_L <- expit(1)            # L
+L <- rbinom(1000, 1, p_L)
+p_A <- expit(-1 + 3*L)     # A 
+A <- rbinom(1000, 1, p_A)
+p_Y <- expit(-4 - A + 3*L) # Y
+Y <- rbinom(1000, 1, p_Y)
+
+df2 <- data.frame(L = L, A = A, Y = Y)
+head(df2, 5)
+```
+
+```
+## Error in parse(text = input): <text>:1:11: unexpected symbol
+## 1: According to
+##               ^
+```
+
+### Q2-(B) Suppose L represents a subject’s age (L = 0 if age < 65, L = 1 o.w.), A represents whether a subject is in the control group (A = 0) or the treatment group (A = 1), and  represents whether a subject is dead (Y = 1) or alive (Y = 0). Please derive the estimate of causal effect based on standardization method under odds ratio scale (both point and 95% CI).
+### Q2-(C)Please derive the estimate of causal effect based on regression-based estimator under odds ratio scale (both point and 95% CI).
+### Q2-(D)Please derive the estimate of causal effect based on IPW estimator under odds ratio scale (both point and 95% CI).
+
+
 ``` r
 library(markdown)
 knitr::spin("hw3.r", knit = TRUE)
@@ -174,17 +212,21 @@ knitr::spin("hw3.r", knit = TRUE)
 ```
 
 ```
-## 1/11                   
-## 2/11 [unnamed-chunk-11]
-## 3/11                   
-## 4/11 [unnamed-chunk-12]
-## 5/11                   
-## 6/11 [unnamed-chunk-13]
-## 7/11                   
-## 8/11 [unnamed-chunk-14]
-## 9/11                   
-## 10/11 [unnamed-chunk-15]
-## 11/11
+## 1/15                   
+## 2/15 [unnamed-chunk-15]
+## 3/15                   
+## 4/15 [unnamed-chunk-16]
+## 5/15                   
+## 6/15 [unnamed-chunk-17]
+## 7/15                   
+## 8/15 [unnamed-chunk-18]
+## 9/15                   
+## 10/15 [unnamed-chunk-19]
+## 11/15                   
+## 12/15 [unnamed-chunk-20]
+## 13/15                   
+## 14/15 [unnamed-chunk-21]
+## 15/15
 ```
 
 ```

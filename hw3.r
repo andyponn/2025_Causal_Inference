@@ -92,5 +92,26 @@ for (b in 1:3000) {
 quantile(B.lis, probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
 
 
+#' ## Estimation for binary outcome. Show your code and answer by R Markdown.
+#' ### Q2-(A)According to the following model, generate variable \(Y\):$$Y \sim Bern(p_y), \quad p_y = \text{expit}(-4 - A + 3L)$$
+
+set.seed(123)
+expit <- function(x) 1 / (1 + exp(-x))
+p_L <- expit(1)            # L
+L <- rbinom(1000, 1, p_L)
+p_A <- expit(-1 + 3*L)     # A 
+A <- rbinom(1000, 1, p_A)
+p_Y <- expit(-4 - A + 3*L) # Y
+Y <- rbinom(1000, 1, p_Y)
+
+df2 <- data.frame(L = L, A = A, Y = Y)
+head(df2, 5)
+
+#' ### Q2-(B) Suppose L represents a subject’s age (L = 0 if age < 65, L = 1 o.w.), A represents whether a subject is in the control group (A = 0) or the treatment group (A = 1), and  represents whether a subject is dead (Y = 1) or alive (Y = 0). Please derive the estimate of causal effect based on standardization method under odds ratio scale (both point and 95% CI).
+
+#' ### Q2-(C)Please derive the estimate of causal effect based on regression-based estimator under odds ratio scale (both point and 95% CI).
+
+#' ### Q2-(D)Please derive the estimate of causal effect based on IPW estimator under odds ratio scale (both point and 95% CI).
+
 library(markdown)
 knitr::spin("hw3.r", knit = TRUE)

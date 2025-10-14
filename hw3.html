@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.7">
+<title>因果分析hw3</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
+li li { font-size: .95em; }
+ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
+*, :before, :after { box-sizing: border-box; }
+a { color: steelblue; }
+pre, img { max-width: 100%; }
+pre { white-space: pre-wrap; word-break: break-word; }
+pre code { display: block; padding: 1em; overflow-x: auto; }
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
+pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
+pre > code {
+  &.message { border-color: #9eeaf9; }
+  &.warning { background: #fff3cd; border-color: #fff3cd; }
+  &.error { background: #f8d7da; border-color: #f8d7da; }
+}
+.fenced-chunk { border-left: 1px solid #666; }
+.code-fence {
+  opacity: .4;
+  border: 1px dashed #666;
+  border-left: 2px solid;
+  &:hover { opacity: inherit; }
+}
+.box, .figure, .table, table { margin: 1em auto; }
+div > .caption { padding: 1px 1em; }
+.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
+.flex-col { display: flex; justify-content: space-between; }
+table {
+  &:only-child:not(.table > *) { margin: auto; }
+  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
+  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
+  thead th { border-bottom: 1px solid #ddd; }
+  &:not(.datatable-table) {
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
+}
+blockquote {
+  color: #666;
+  margin: 0;
+  padding: 1px 1em;
+  border-left: .5em solid #eee;
+}
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC {
+  a { text-decoration: none; }
+  ul { list-style: none; padding-left: 1em; }
+  & > ul { padding: 0; }
+  ul ul { border-left: 1px solid lightsteelblue; }
+}
+.body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.main-number::after { content: "."; }
+span[class^="ref-number-"] { font-weight: bold; }
+.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
+.cross-ref-chp::before { content: "Chapter "; }
+.cross-ref-sec::before { content: "Section "; }
+.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
+.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
+.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
+.abstract, #refs {
+  &::before { display: block; margin: 1em auto; font-weight: bold; }
+}
+.abstract::before { content: "Abstract"; text-align: center; }
+#refs::before { content: "Bibliography"; font-size: 1.5em; }
+.ref-paren-open::before { content: "("; }
+.ref-paren-close::after { content: ")"; }
+.ref-semicolon::after { content: "; "; }
+.ref-and::after { content: " and "; }
+.ref-et-al::after { content: " et al."; font-style: italic; }
+.footnote-ref a {
+  &::before { content: "["; }
+  &::after { content: "]"; }
+}
+section.footnotes {
+  margin-top: 2em;
+  &::before { content: ""; display: block; max-width: 20em; }
+}
+.fade {
+  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
+  opacity: 0.6;
+}
+
+@media print {
+  body { max-width: 100%; }
+  tr, img { break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
+}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.14/css/prism-xcode.min.css">
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>因果分析hw3</h1></div>
+<div class="author"><h2>陳葳芃 統計碩1 314657018</h2></div>
+<div class="date"><h3>2025-10-14</h3></div>
+</div>
+<div class="body">
+<pre><code class="language-r">source(&quot;renv/activate.R&quot;)
+</code></pre>
+<pre><code>## - Project '~/Documents/Project/2025_Causal_Inference' loaded. [renv 1.1.5]
+## - The project is out-of-sync -- use `renv::status()` for details.
+</code></pre>
+<h2 id="sec:part-i-estimation-for-continuous-outcome-show-your-code-and-answer-by-r-markdown">Part I: Estimation for continuous outcome. Show your code and answer by R Markdown.</h2>
+<h3 id="sec:q1-a-according-to-the-following-models-please-simulate-a-dataset-with-1-000-observations-by-r-and-show-the-first-5-observations">Q1-(A) According to the following models, please simulate a dataset with 1,000 observations by R, and show the first 5 observations.</h3>
+<pre><code class="language-r"># 設定隨機種子以便重現
+set.seed(123)
+
+
+# 生成 L
+L &lt;- runif(1000, min = 8, max = 16)
+
+# 定義 expit 函數
+expit &lt;- function(x) {
+  1 / (1 + exp(-x))
+}
+
+# 計算 p_A
+p_A &lt;- expit(6 - 0.5 * L)
+# 根據 Bernoulli 生成 A
+A &lt;- rbinom(1000, size = 1, prob = p_A)
+# 計算 E[Y|A,L]
+EY &lt;- 20 + 2*A + 0.1*L
+
+# 根據正態分布生成 Y
+Y &lt;- rnorm(1000, mean = EY, sd = 1)
+
+# 建立資料框
+df &lt;- data.frame(L = L, A = A, Y = Y)
+
+# 顯示前 5 筆資料
+head(df, 5)
+</code></pre>
+<pre><code>##          L A        Y
+## 1 10.30062 1 22.03426
+## 2 14.30644 0 20.39069
+## 3 11.27182 1 23.10920
+## 4 15.06414 1 23.37424
+## 5 15.52374 0 19.00303
+</code></pre>
+<pre><code class="language-r">library(markdown)
+knitr::spin(&quot;hw3.r&quot;, knit = TRUE)
+</code></pre>
+<pre><code>## Warning: It seems you should call rmarkdown::render() instead of
+## knitr::knit2html() because hw3.Rmd appears to be an R Markdown v2 document.
+</code></pre>
+<pre><code>## 
+## 
+## processing file: hw3.Rmd
+</code></pre>
+<pre><code>## 1/5                  
+## 2/5 [unnamed-chunk-5]
+## 3/5                  
+## 4/5 [unnamed-chunk-6]
+## 5/5
+</code></pre>
+<pre><code>## output file: hw3.md
+</code></pre>
+<pre><code>## Warning in file.remove(outsrc): cannot remove file 'hw3.Rmd', reason 'No such
+## file or directory'
+</code></pre>
+</div>
+</body>
+</html>

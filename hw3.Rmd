@@ -1,16 +1,19 @@
-#' ---
-#' title: "因果分析hw3"
-#' author: "陳葳芃 統計碩1 314657018"
-#' date: "`r Sys.Date()`"
-#' output: html_document
-#' ---
+---
+title: "因果分析hw3"
+author: "陳葳芃 統計碩1 314657018"
+date: "`r Sys.Date()`"
+output: html_document
+---
 
+```{r}
 source("renv/activate.R")
 library(markdown)
-#' ## Part I: Estimation for continuous outcome. Show your code and answer by R Markdown.
+```
 
-#' ### Q1-(A) According to the following models, please simulate a dataset with 1,000 observations by R, and show the first 5 observations.
+## Part I: Estimation for continuous outcome. Show your code and answer by R Markdown.
+### Q1-(A) According to the following models, please simulate a dataset with 1,000 observations by R, and show the first 5 observations.
 
+```{r}
 # 設定隨機種子以便重現
 set.seed(123)
 # 生成 L
@@ -33,8 +36,11 @@ Y <- rnorm(1000, mean = EY, sd = 1)
 df <- data.frame(L = L, A = A, Y = Y)
 # 顯示前 5 筆資料
 head(df, 5)
+```
 
-#' ### Q1-(B)Suppose L represents children’s age, A represents whether a child walks to school (A = 0) or picked up by parents (A = 1), and  represents children’s BMI. Please derive the estimate of causal effect based on standardization method under difference scale (both point and 95% CI).
+### Q1-(B)Suppose L represents children’s age, A represents whether a child walks to school (A = 0) or picked up by parents (A = 1), and  represents children’s BMI. Please derive the estimate of causal effect based on standardization method under difference scale (both point and 95% CI).
+
+```{r}
 lm.Y.AC = lm(Y ~ ., data = df)
 newdata_df = df
 newdata_df$A = 1
@@ -57,8 +63,11 @@ for (b in 1:3000) {
   B.lis[b] = phi.1 - phi.0
   }
   quantile(B.lis,probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+```
 
-#' ### Q1-(C)Please derive the estimate of causal effect based on regression-based estimator under difference scale (both point and 95% CI).
+### Q1-(C)Please derive the estimate of causal effect based on regression-based estimator under difference scale (both point and 95% CI).
+
+```{r}
 set.seed(123)
 lm.Y.AC_Reg = lm(Y ~ ., data = df)
 print(lm.Y.AC_Reg$coefficients[3])#point estimate by regression-based method
@@ -72,8 +81,11 @@ for (b in 1:3000) {
   B_Reg.lis[b] = lm.Y.AC_Reg$coefficients[3]
   }
 quantile(B_Reg.lis,probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+```
 
-#' ### Q1-(D)Please derive the estimate of causal effect based on IPW estimator under difference scale (both point and 95% CI).
+### Q1-(D)Please derive the estimate of causal effect based on IPW estimator under difference scale (both point and 95% CI).
+
+```{r}
 lm.A.C = glm(A ~ .,data = df[,-2], family = binomial(link = "logit"))
 phi.1 = mean((df$A == 1)*df$Y/predict(lm.A.C,type = "response"))
 phi.0 = mean((df$A == 0)*df$Y/(1 - predict(lm.A.C,type = "response")))
@@ -94,3 +106,5 @@ quantile(B.lis, probs = c(0.025,0.975))#percentile bootstrap confidence interval
 
 library(markdown)
 knitr::spin("hw3.r", knit = TRUE)
+```
+

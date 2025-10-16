@@ -107,11 +107,97 @@ Y <- rbinom(1000, 1, p_Y)
 df2 <- data.frame(L = L, A = A, Y = Y)
 head(df2, 5)
 
+
 #' ### Q2-(B) Suppose L represents a subject’s age (L = 0 if age < 65, L = 1 o.w.), A represents whether a subject is in the control group (A = 0) or the treatment group (A = 1), and  represents whether a subject is dead (Y = 1) or alive (Y = 0). Please derive the estimate of causal effect based on standardization method under odds ratio scale (both point and 95% CI).
+glm.Y.AL = glm(Y ~ ., data = df2, family=binomial)
+newdata_df2 = df2
+newdata_df2$A = 1
+phi.1 = mean(predict(glm.Y.AL,newdata = newdata_df2,type = "response"))
+newdata_df2$A = 0
+phi.0 = mean(predict(glm.Y.AL,newdata = newdata_df2,type = "response"))
+print(phi.1 - phi.0)#point estimate by standardization method
+odds1=phi.1/(1-phi.1)
+odds0=phi.0/(1-phi.0)
+odds_ratio_st=odds1/odds0
+print(odds_ratio_st)
+
+B.lis = rep(NA, 3000)
+for (b in 1:3000) {
+  resample.df = df2[sample(1000,1000,replace = T),]
+  glm.Y.AL = glm(Y ~ ., data = resample.df, family="binomial")
+
+  resample.df$A = 1
+  phi.1 = mean(predict(glm.Y.AL,newdata = resample.df, type = "response"))
+
+  resample.df$A = 0
+  phi.0 = mean(predict(glm.Y.AL,newdata = resample.df, type = "response"))
+  odds1=phi.1/(1-phi.1)
+  odds0=phi.0/(1-phi.0)
+  odds_ratio_st=odds1/odds0
+  B.lis[b] = odds1/odds0
+  }
+  quantile(B.lis,probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+
 
 #' ### Q2-(C)Please derive the estimate of causal effect based on regression-based estimator under odds ratio scale (both point and 95% CI).
+set.seed(123)
+glm.Y.AL_Reg = glm(Y ~ ., data = df2,family=binomial)
+print(exp(glm.Y.AL_Reg$coefficients[3]))#point estimate by regression-based method
+
+B_Reg.lis = rep(NA, 3000)
+for (b in 1:3000) {
+  resample.regdf = df2[sample(1:1000,1000,replace = T),]
+  lm.Y.AL_Reg = glm(Y ~ ., data = resample.regdf, family=binomial)
+
+  B_Reg.lis[b] = exp(lm.Y.AL_Reg$coefficients[3])
+  }
+quantile(B_Reg.lis,probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+
 
 #' ### Q2-(D)Please derive the estimate of causal effect based on IPW estimator under odds ratio scale (both point and 95% CI).
 
 library(markdown)
 knitr::spin("hw3.r", knit = TRUE)
+
+
+
+
+
+##################
+set.seed(123)
+
+odds.ratio = function(p1, p2){
+    p1.odds = p1/(1 - p1)
+    p2.odds = p2/(1 - p2)
+    return(p1.odds/p2.odds)
+}
+
+###A.
+
+pl = expit(1)
+
+L = rbinom(1000, 1, pl)
+
+pa = expit(-1 + 3 * L)
+A = rbinom(1000, 1, pa)
+
+py = expit(-4 - A + 3 * L)
+Y = rbinom(1000, 1, py)
+
+dataB = data.frame(cbind(L, A, Y))
+
+head(dataB, 5)
+
+
+glm.Y.AL = glm(Y ~ ., data = dataB, family = binomial)
+
+newdata_dataB = dataB
+newdata_dataB$A = 1
+phi.1 = mean(predict(glm.Y.AL, newdata = newdata_dataB, type = "response"))
+phi.1
+newdata_dataB$A = 0
+phi.0 = mean(predict(glm.Y.AL, newdata = newdata_dataB, type = "response"))
+phi.0
+##point estimate
+odds.ratio(phi.1, phi.0) 
+

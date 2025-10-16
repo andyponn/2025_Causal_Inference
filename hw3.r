@@ -115,7 +115,7 @@ newdata_df2$A = 1
 phi.1 = mean(predict(glm.Y.AL,newdata = newdata_df2,type = "response"))
 newdata_df2$A = 0
 phi.0 = mean(predict(glm.Y.AL,newdata = newdata_df2,type = "response"))
-print(phi.1 - phi.0)#point estimate by standardization method
+print(phi.1 - phi.0) #point estimate by standardization method
 odds1=phi.1/(1-phi.1)
 odds0=phi.0/(1-phi.0)
 odds_ratio_st=odds1/odds0
@@ -151,72 +151,10 @@ for (b in 1:3000) {
 
   B_Reg.lis[b] = exp(lm.Y.AL_Reg$coefficients[3])
   }
-quantile(B_Reg.lis,probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+quantile(B_Reg.lis,probs = c(0.025,0.975)) #percentile bootstrap confidence interval of causal effect
 
 
 #' ### Q2-(D)Please derive the estimate of causal effect based on IPW estimator under odds ratio scale (both point and 95% CI).
-library(locfit)
-ipw.method = function(a1, a2, df){
-  n.row = dim(df)[1]
-  mod.Y.AML = lm(Y ~ A + L , data = df)
-  mod.M.AL = glm(L ~ A , data = df,
-                family = binomial(link = "logit"))
-  mod.A.L = glm(A ~ 1, data = df,
-                family = binomial(link = "logit"))
-
-density.M.a2.L = rep(NA, n.row)
-df.copy = df;df.copy$A = a2
-prob.M.a2.L = predict(mod.M.AL, df.copy, type = "response")
-
-density.M.a.L = rep(NA, n.row)
-prob.M.a.L = predict(mod.M.AL, df, type = "response")
-
-if (a1 == 1) {
-  prob.A.L = predict(mod.A.L, type = "response")
-}else{
-  prob.A.L = 1 - predict(mod.A.L, type = "response")
-}
-
-res = (df$A == a1)*df$Y*prob.M.a2.L/prob.M.a.L/prob.A.L
-return(mean(res))
-}
-
-odds.ratio = function(p1, p2){
-  p1.odds = p1/(1 - p1)
-  p2.odds = p2/(1 - p2)
-return(p1.odds/p2.odds)
-}
-
-ipw.te = odds.ratio(ipw.method(1, 1, df = df2), ipw.method(0, 0, df = df2))
-ipw.nie = odds.ratio(ipw.method(1, 1, df = df2), ipw.method(1, 0, df = df2))
-ipw.nde = odds.ratio(ipw.method(1, 0, df = df2), ipw.method(0, 0, df = df2))
-print(c(ipw.te, ipw.nie, ipw.nde))
-
-B=3146
-n.sample=1000
-B.lis = data.frame(te = rep(NA, B),
-nie = rep(NA, B),
-nde = rep(NA, B))
-for (b in 1:B) {
-  resample.df = df2[sample(n.sample,n.sample,replace = T),]
-  B.lis$te[b] = odds.ratio(ipw.method(1, 1, df = resample.df),ipw.method(0, 0, df = resample.df))
-  B.lis$nie[b] = odds.ratio(ipw.method(1, 1, df = resample.df),ipw.method(1, 0, df = resample.df))
-  B.lis$nde[b] = odds.ratio(ipw.method(1, 0, df = resample.df),ipw.method(0, 0, df = resample.df))
-}
-
-quantile(B.lis$te,probs = c(0.025,0.975))
-quantile(B.lis$nie,probs = c(0.025,0.975))
-quantile(B.lis$nde,probs = c(0.025,0.975))
-
-
-lm.A.L = glm(A ~ L,data = df2, family = binomial(link = "logit"))
-phi.1 = mean((df2$A == 1)*df2$Y/predict(lm.A.L,type = "response"))
-phi.0 = mean((df2$A == 0)*df2$Y/(1 - predict(lm.A.L,type = "response")))
-odds1_bin=phi.1 /(1- phi.1 )
-odds0_bin=phi.0 /(1- phi.0 )
-print(odds1_bin/odds0_bin) #IPW estimates of causal effect under odds scale
-
-
 B.lis = rep(NA, 3000)
 for (b in 1:3000) {
   resample.df = df2[sample(1:1000,1000,replace = T),]

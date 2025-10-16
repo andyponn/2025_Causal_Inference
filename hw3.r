@@ -82,7 +82,7 @@ print(phi.1 - phi.0)#IPW estimates of causal effect under difference scale
 
 B.lis = rep(NA, 3000)
 for (b in 1:3000) {
-  resample.df = df[sample(220,220,replace = T),]
+  resample.df = df[sample(1000,1000,replace = T),]
   lm.A.C = glm(A ~ .,data = resample.df[,1:2], family = binomial(link = "logit"))
   phi.1 = mean((resample.df$A == 1)*resample.df$Y/predict(lm.A.C,type = "response"))
   phi.0 = mean((resample.df$A == 0)*resample.df$Y/(1 - predict(lm.A.C,type = "response")))
@@ -155,49 +155,81 @@ quantile(B_Reg.lis,probs = c(0.025,0.975))#percentile bootstrap confidence inter
 
 
 #' ### Q2-(D)Please derive the estimate of causal effect based on IPW estimator under odds ratio scale (both point and 95% CI).
+library(locfit)
+ipw.method = function(a1, a2, df){
+  n.row = dim(df)[1]
+  mod.Y.AML = lm(Y ~ A + L , data = df)
+  mod.M.AL = glm(L ~ A , data = df,
+                family = binomial(link = "logit"))
+  mod.A.L = glm(A ~ 1, data = df,
+                family = binomial(link = "logit"))
 
-library(markdown)
-knitr::spin("hw3.r", knit = TRUE)
+density.M.a2.L = rep(NA, n.row)
+df.copy = df;df.copy$A = a2
+prob.M.a2.L = predict(mod.M.AL, df.copy, type = "response")
 
+density.M.a.L = rep(NA, n.row)
+prob.M.a.L = predict(mod.M.AL, df, type = "response")
 
-
-
-
-##################
-set.seed(123)
-
-odds.ratio = function(p1, p2){
-    p1.odds = p1/(1 - p1)
-    p2.odds = p2/(1 - p2)
-    return(p1.odds/p2.odds)
+if (a1 == 1) {
+  prob.A.L = predict(mod.A.L, type = "response")
+}else{
+  prob.A.L = 1 - predict(mod.A.L, type = "response")
 }
 
-###A.
+res = (df$A == a1)*df$Y*prob.M.a2.L/prob.M.a.L/prob.A.L
+return(mean(res))
+}
 
-pl = expit(1)
+odds.ratio = function(p1, p2){
+  p1.odds = p1/(1 - p1)
+  p2.odds = p2/(1 - p2)
+return(p1.odds/p2.odds)
+}
 
-L = rbinom(1000, 1, pl)
+ipw.te = odds.ratio(ipw.method(1, 1, df = df2), ipw.method(0, 0, df = df2))
+ipw.nie = odds.ratio(ipw.method(1, 1, df = df2), ipw.method(1, 0, df = df2))
+ipw.nde = odds.ratio(ipw.method(1, 0, df = df2), ipw.method(0, 0, df = df2))
+print(c(ipw.te, ipw.nie, ipw.nde))
 
-pa = expit(-1 + 3 * L)
-A = rbinom(1000, 1, pa)
+B=3146
+n.sample=1000
+B.lis = data.frame(te = rep(NA, B),
+nie = rep(NA, B),
+nde = rep(NA, B))
+for (b in 1:B) {
+  resample.df = df2[sample(n.sample,n.sample,replace = T),]
+  B.lis$te[b] = odds.ratio(ipw.method(1, 1, df = resample.df),ipw.method(0, 0, df = resample.df))
+  B.lis$nie[b] = odds.ratio(ipw.method(1, 1, df = resample.df),ipw.method(1, 0, df = resample.df))
+  B.lis$nde[b] = odds.ratio(ipw.method(1, 0, df = resample.df),ipw.method(0, 0, df = resample.df))
+}
 
-py = expit(-4 - A + 3 * L)
-Y = rbinom(1000, 1, py)
-
-dataB = data.frame(cbind(L, A, Y))
-
-head(dataB, 5)
+quantile(B.lis$te,probs = c(0.025,0.975))
+quantile(B.lis$nie,probs = c(0.025,0.975))
+quantile(B.lis$nde,probs = c(0.025,0.975))
 
 
-glm.Y.AL = glm(Y ~ ., data = dataB, family = binomial)
+lm.A.L = glm(A ~ L,data = df2, family = binomial(link = "logit"))
+phi.1 = mean((df2$A == 1)*df2$Y/predict(lm.A.L,type = "response"))
+phi.0 = mean((df2$A == 0)*df2$Y/(1 - predict(lm.A.L,type = "response")))
+odds1_bin=phi.1 /(1- phi.1 )
+odds0_bin=phi.0 /(1- phi.0 )
+print(odds1_bin/odds0_bin) #IPW estimates of causal effect under odds scale
 
-newdata_dataB = dataB
-newdata_dataB$A = 1
-phi.1 = mean(predict(glm.Y.AL, newdata = newdata_dataB, type = "response"))
-phi.1
-newdata_dataB$A = 0
-phi.0 = mean(predict(glm.Y.AL, newdata = newdata_dataB, type = "response"))
-phi.0
-##point estimate
-odds.ratio(phi.1, phi.0) 
+
+B.lis = rep(NA, 3000)
+for (b in 1:3000) {
+  resample.df = df2[sample(1:1000,1000,replace = T),]
+  lm.A.L = glm(A ~ L,data = resample.df, family = binomial(link = "logit"))
+  phi.1 = mean((resample.df$A == 1)*resample.df$Y/predict(lm.A.L,type = "response"))
+  phi.0 = mean((resample.df$A == 0)*resample.df$Y/(1 - predict(lm.A.L,type = "response")))
+
+  odds1_bin=phi.1 /(1- phi.1 )
+  odds0_bin=phi.0 /(1- phi.0 )
+
+  B.lis[b] = (odds1_bin/odds0_bin)
+  }
+quantile(B.lis, probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+
+
 

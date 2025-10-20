@@ -41,10 +41,10 @@ newdata_df$A = 1
 phi.1 = mean(predict(lm.Y.AC,newdata = newdata_df))
 newdata_df$A = 0
 phi.0 = mean(predict(lm.Y.AC,newdata = newdata_df))
-print(phi.1 - phi.0)#point estimate by standardization method
+print(phi.1 - phi.0) #point estimate by standardization method under difference scale
 
 
-B.lis = rep(NA, 3000)
+B.lis = rep(NA, 300)
 for (b in 1:3000) {
   resample.df = df[sample(220,220,replace = T),]
   lm.Y.AC = lm(Y ~ ., data = resample.df)
@@ -61,8 +61,7 @@ for (b in 1:3000) {
 #' ### Q1-(C)Please derive the estimate of causal effect based on regression-based estimator under difference scale (both point and 95% CI).
 set.seed(123)
 lm.Y.AC_Reg = lm(Y ~ ., data = df)
-print(lm.Y.AC_Reg$coefficients[3])#point estimate by regression-based method
-
+print(lm.Y.AC_Reg$coefficients[3]) #point estimate by regression-based method under difference scale
 
 B_Reg.lis = rep(NA, 3000)
 for (b in 1:3000) {
@@ -71,13 +70,13 @@ for (b in 1:3000) {
 
   B_Reg.lis[b] = lm.Y.AC_Reg$coefficients[3]
   }
-quantile(B_Reg.lis,probs = c(0.025,0.975))#percentile bootstrap confidence interval of causal effect
+quantile(B_Reg.lis,probs = c(0.025,0.975)) #percentile bootstrap confidence interval of causal effect
 
 #' ### Q1-(D)Please derive the estimate of causal effect based on IPW estimator under difference scale (both point and 95% CI).
 lm.A.C = glm(A ~ .,data = df[,-2], family = binomial(link = "logit"))
 phi.1 = mean((df$A == 1)*df$Y/predict(lm.A.C,type = "response"))
 phi.0 = mean((df$A == 0)*df$Y/(1 - predict(lm.A.C,type = "response")))
-print(phi.1 - phi.0)#IPW estimates of causal effect under difference scale
+print(phi.1 - phi.0)  #IPW estimates of causal effect under difference scale
 
 
 B.lis = rep(NA, 3000)
@@ -115,11 +114,10 @@ newdata_df2$A = 1
 phi.1 = mean(predict(glm.Y.AL,newdata = newdata_df2,type = "response"))
 newdata_df2$A = 0
 phi.0 = mean(predict(glm.Y.AL,newdata = newdata_df2,type = "response"))
-print(phi.1 - phi.0) #point estimate by standardization method
 odds1=phi.1/(1-phi.1)
 odds0=phi.0/(1-phi.0)
 odds_ratio_st=odds1/odds0
-print(odds_ratio_st)
+print(odds_ratio_st) #point estimate by standardization method under odds ratio scale
 
 B.lis = rep(NA, 3000)
 for (b in 1:3000) {
@@ -142,7 +140,7 @@ for (b in 1:3000) {
 #' ### Q2-(C)Please derive the estimate of causal effect based on regression-based estimator under odds ratio scale (both point and 95% CI).
 set.seed(123)
 glm.Y.AL_Reg = glm(Y ~ ., data = df2,family=binomial)
-print(exp(glm.Y.AL_Reg$coefficients[3]))#point estimate by regression-based method
+print(exp(glm.Y.AL_Reg$coefficients[3])) #point estimate by regression-based method
 
 B_Reg.lis = rep(NA, 3000)
 for (b in 1:3000) {
@@ -155,6 +153,15 @@ quantile(B_Reg.lis,probs = c(0.025,0.975)) #percentile bootstrap confidence inte
 
 
 #' ### Q2-(D)Please derive the estimate of causal effect based on IPW estimator under odds ratio scale (both point and 95% CI).
+lm.A.L = glm(A ~ L, data = df2, family = binomial(link = "logit"))
+phi.1 = mean((data2$A == 1)*data2$Y/predict(lm.A.L,type = "response"))
+phi.0 = mean((data2$A == 0)*data2$Y/(1 - predict(lm.A.L,type = "response")))
+
+odds1=phi.1/(1-phi.1)
+odds0=phi.0/(1-phi.0)
+odds_ratio=odds1/odds0
+print(odds_ratio) #IPW estimates of causal effect under odds ratio scale
+
 B.lis = rep(NA, 3000)
 for (b in 1:3000) {
   resample.df = df2[sample(1:1000,1000,replace = T),]
